@@ -5,10 +5,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ovh.kocproz.markpages.Permission;
-import ovh.kocproz.markpages.data.model.PageMaintainerModel;
-import ovh.kocproz.markpages.data.model.PageModel;
-import ovh.kocproz.markpages.data.model.PermissionModel;
-import ovh.kocproz.markpages.data.model.UserModel;
+import ovh.kocproz.markpages.data.model.*;
+import ovh.kocproz.markpages.data.repository.FavouritePagesRepository;
 import ovh.kocproz.markpages.data.repository.PageMaintainerRepository;
 import ovh.kocproz.markpages.data.repository.PermissionRepository;
 import ovh.kocproz.markpages.data.repository.UserRepository;
@@ -26,15 +24,18 @@ public class UserService {
 
     private UserRepository userRepository;
     private PermissionRepository permissionRepository;
+    private FavouritePagesRepository favouritePagesRepository;
     private Pbkdf2PasswordEncoder passwordEncoder;
     private PageMaintainerRepository maintainerRepository;
 
     public UserService(UserRepository userRepository,
                        PermissionRepository permissionRepository,
+                       FavouritePagesRepository favouritePagesRepository,
                        Pbkdf2PasswordEncoder passwordEncoder,
                        PageMaintainerRepository maintainerRepository) {
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
+        this.favouritePagesRepository = favouritePagesRepository;
         this.passwordEncoder = passwordEncoder;
         this.maintainerRepository = maintainerRepository;
     }
@@ -52,6 +53,25 @@ public class UserService {
             pm.setUser(user);
             permissionRepository.save(pm);
         }
+    }
+
+    public void addFavourite(String username, PageModel page) {
+        addFavourite(userRepository.getByUsername(username), page);
+    }
+
+    public void addFavourite(UserModel user, PageModel page) {
+        FavouritePagesModel fpm = new FavouritePagesModel();
+        fpm.setUser(user);
+        fpm.setPage(page);
+        favouritePagesRepository.save(fpm);
+    }
+
+    public void removeFavourite(String username, PageModel page) {
+        removeFavourite(userRepository.getByUsername(username), page);
+    }
+
+    public void removeFavourite(UserModel user, PageModel page) {
+        favouritePagesRepository.deleteByUserAndPage(user, page);
     }
 
     public Set<PermissionModel> getUserPermissions(UserModel user) {
